@@ -34,8 +34,8 @@ def objective(trial):
                 weight=atk, 
                 params={'desired_state': AttackState}
             ),
-            'holding_more_than_3_kets': RewTerm(
-                func=holding_more_than_3_kets, 
+            'holding_more_than_3_keys': RewTerm(
+                func=holding_more_than_3_keys, 
                 weight=hold
             ),
         },
