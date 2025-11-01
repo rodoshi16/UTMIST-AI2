@@ -537,6 +537,89 @@ def on_combo_reward(env: WarehouseBrawl, agent: str) -> float:
         return -1.0
     else:
         return 1.0
+    
+# -------------------------------------------------------------------------
+# ------------------------- CUSTOM REWARD FUNCTIONS -----------------------
+
+def target_height_reward(
+    env: WarehouseBrawl,
+    target_height: float,
+    obj_name: str = 'player'
+) -> float:
+    """Reward asset for being close to target height using L2 squared kernel.
+
+    Note:
+        For flat terrain, target height is in the world frame. For rough terrain,
+        sensor readings can adjust the target height to account for the terrain.
+    """
+    # Extract the used quantities (to enable type-hinting)
+    obj: GameObject = env.objects[obj_name]
+
+    # Compute the L2 squared penalty
+    return -((obj.body.position.y - target_height)**2)
+
+def head_to_middle_reward(
+    env: WarehouseBrawl,
+) -> float:
+    """
+    Rewards player for moving towards the middle of the arena.
+
+    Args:
+        env (WarehouseBrawl): The game environment.
+
+    Returns:
+        float: The computed reward.
+    """
+    # Get player object from the environment
+    player: Player = env.objects["player"]
+
+    # Compute reward for moving towards the middle
+    multiplier = -1 if player.body.position.x > 0 else 1
+    reward = multiplier * (player.body.position.x - player.prev_x)
+
+    return reward
+
+def head_to_opponent(
+    env: WarehouseBrawl,
+) -> float:
+    """
+    Rewards player for moving towards the opponent.
+
+    Args:
+        env (WarehouseBrawl): The game environment.
+    
+    Returns:
+        float: The computed reward.
+    """
+    # Get player object from the environment
+    player: Player = env.objects["player"]
+    opponent: Player = env.objects["opponent"]
+
+    # Compute reward for moving towards the opponent
+    multiplier = -1 if player.body.position.x > opponent.body.position.x else 1
+    reward = multiplier * (player.body.position.x - player.prev_x)
+
+    return reward
+
+def taunt_reward(
+    env: WarehouseBrawl,
+) -> float:
+    """
+    Rewards player for being in the Taunt state.
+
+    Args:
+        env (WarehouseBrawl): The game environment.
+
+    Returns:
+        float: The computed reward.
+    """
+    # Get player object from the environment
+    player: Player = env.objects["player"]
+
+    # Reward if the player is in the Taunt state
+    reward = 1 if isinstance(player.state, TauntState) else 0.0
+
+    return reward * env.dt
 
 '''
 Add your dictionary of RewardFunctions here using RewTerms
