@@ -569,15 +569,22 @@ def head_to_middle_reward(
 
     Returns:
         float: The computed reward.
+    
+    Fix: Continuous everywhere, directly measures progress toward the middle and no sign flipping 
+    issue. 
+
     """
-    # Get player object from the environment
     player: Player = env.objects["player"]
-
-    # Compute reward for moving towards the middle
-    multiplier = -1 if player.body.position.x > 0 else 1
-    reward = multiplier * (player.body.position.x - player.prev_x)
-
+    
+    # Distance from middle
+    dist_from_middle = abs(player.body.position.x)
+    
+    # Reward for reducing distance (moving toward middle)
+    prev_dist = abs(player.prev_x)
+    reward = prev_dist - dist_from_middle
+    
     return reward
+
 
 def head_to_opponent(
     env: WarehouseBrawl,
@@ -590,15 +597,24 @@ def head_to_opponent(
     
     Returns:
         float: The computed reward.
+
+    Fix: Considers horizontal and vertical movement, scales with distance
     """
-    # Get player object from the environment
-    player: Player = env.objects["player"]
-    opponent: Player = env.objects["opponent"]
-
-    # Compute reward for moving towards the opponent
-    multiplier = -1 if player.body.position.x > opponent.body.position.x else 1
-    reward = multiplier * (player.body.position.x - player.prev_x)
-
+    # Current distance
+    current_dist = np.sqrt(
+        (player.body.position.x - opponent.body.position.x)**2 +
+        (player.body.position.y - opponent.body.position.y)**2
+    )
+    
+    # Previous distance
+    prev_dist = np.sqrt(
+        (player.prev_x - opponent.body.position.x)**2 +
+        (player.prev_y - opponent.body.position.y)**2
+    )
+    
+    # Reward for getting closer
+    reward = prev_dist - current_dist
+    
     return reward
 
 def taunt_reward(
